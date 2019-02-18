@@ -29,6 +29,10 @@ SOFTWARE.
 #define RESET_ALL 1
 #define RESET_CLASS 2
 #define RESET_DEVICE 3
+#define RESET_PORT 4
+
+
+char error_message[256];
 
 void print_usage(void)
 {
@@ -155,6 +159,46 @@ int str_to_vid_pid(char *vid_pid, int *vid, int *pid)
 	return 0;
 }
 
+int str_to_bus_dev(char *bus_dev, int *bus, int *dev)
+{
+	int i;
+	int val;
+	int n;
+	char *bus_string;
+	char *dev_string;
+
+	if(strlen(bus_dev) < 3){
+		printf("Invalid <bus>.<dev>: %s.\n", bus_dev);
+		return 1;
+	}
+	
+	
+	for (n=0; n<strlen(bus_dev); n++) {
+		if(bus_dev[n] == '.') break;
+	}
+	
+	if(n >= strlen(bus_dev)){
+		printf("Invalid <dev>.<bus>, no '.'.\n");
+		return 1;
+	}
+
+	bus_string = malloc(n+2);
+	strncpy(bus_string, bus_dev, n+1);
+	bus_string[n+1] = '\0';
+	
+	dev_string = malloc(strlen(bus_dev)-n)
+	strncpy(dev_string, bus_dev+n+1, strlen(bus_dev)-n-1);
+	dev_string[sizeof(dev_string)-1] = '\0';
+	
+	*bus = atoi(bus_string);
+	*dev = atoi(dev_string);
+	if(*bus == 0 || *dev == 0 ){
+		printf("Invalid <bus>.<dev>: %s.\n", bus_dev);
+		return 1;
+	}
+
+	return 0;
+}
 
 int str_to_class(const char *str, int *device_class)
 {
@@ -351,6 +395,7 @@ int main(int argc, char *argv[])
 	int vid, pid, device_class;
 	int rc = 0;
 	int op = -1;
+	char *error;
 
 	if(argc == 2){
 		if(!strcmp(argv[1], "-a")){
